@@ -11,6 +11,7 @@ $excludedDirectories = [
     'storage',
     'logs',
     'files',
+    'pages',
 ];
 
 $excludedFiles = [
