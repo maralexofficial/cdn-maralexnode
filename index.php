@@ -28,6 +28,7 @@ $excludedExtensions = [
     'log',
     'bak',
     'sh',
+    'html',
 ];
 
 $hideHiddenFiles = true;
