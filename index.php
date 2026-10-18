@@ -45,7 +45,7 @@ function e(string $value): string
 function formatBytes(int|false $bytes): string
 {
     if ($bytes === false) {
-        return 'Unbekannt';
+        return 'Unknown';
     }
 
     if ($bytes < 1024) {
@@ -57,13 +57,13 @@ function formatBytes(int|false $bytes): string
 
     foreach ($units as $unit) {
         if ($size < 1024 || $unit === 'TB') {
-            return number_format($size, 2, ',', '.') . ' ' . $unit;
+            return number_format($size, 2, '.', ',') . ' ' . $unit;
         }
 
         $size /= 1024;
     }
 
-    return 'Unbekannt';
+    return 'Unknown';
 }
 
 function isHidden(string $name): bool
@@ -75,14 +75,14 @@ $rootRealPath = realpath($rootDirectory);
 
 if ($rootRealPath === false) {
     http_response_code(500);
-    exit('Stammverzeichnis nicht verfügbar.');
+    exit('Root directory is unavailable.');
 }
 
 $relativePath = $_GET['dir'] ?? '';
 
 if (!is_string($relativePath)) {
     http_response_code(400);
-    exit('Ungültiger Pfad.');
+    exit('Invalid path.');
 }
 
 if (
@@ -92,7 +92,7 @@ if (
     || preg_match('~(^|[\\\\/])\.\.([\\\\/]|$)~', $relativePath)
 ) {
     http_response_code(400);
-    exit('Ungültiger Pfad.');
+    exit('Invalid path.');
 }
 
 $targetPath = $relativePath === ''
@@ -113,7 +113,7 @@ if (
     )
 ) {
     http_response_code(403);
-    exit('Zugriff verweigert.');
+    exit('Access denied.');
 }
 
 $currentRelativePath = ltrim(
@@ -173,7 +173,7 @@ try {
     }
 } catch (UnexpectedValueException $exception) {
     http_response_code(403);
-    exit('Verzeichnis kann nicht gelesen werden.');
+    exit('Unable to read directory.');
 }
 
 usort($items, static function (array $a, array $b): int {
@@ -186,24 +186,27 @@ usort($items, static function (array $a, array $b): int {
 
 $parentPath = dirname($currentRelativePath);
 $hasParent = $currentRelativePath !== '' && $parentPath !== '.';
+
 ?>
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dateibrowser</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#020617">
+    <title>Directory Listing</title>
+    <script src="https://cdn.maralexno.de/tailwindcss/v4/tailwind.js"></script>
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-100">
+<body class="min-h-screen bg-slate-950 text-slate-100 antialiased">
     <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header class="mb-8">
             <p class="mb-2 text-sm font-medium text-violet-400">
-                DATEIBROWSER
+                FILE BROWSER
             </p>
 
             <h1 class="text-3xl font-bold tracking-tight">
-                Verzeichnisübersicht
+                Directory Listing
             </h1>
 
             <p class="mt-3 break-all text-sm text-slate-400">
@@ -214,7 +217,7 @@ $hasParent = $currentRelativePath !== '' && $parentPath !== '.';
         <section class="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
             <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-5 py-4">
                 <span class="text-sm text-slate-400">
-                    <?= count($items) ?> Einträge
+                    <?= count($items) ?> items
                 </span>
 
                 <?php if ($hasParent): ?>
@@ -222,14 +225,14 @@ $hasParent = $currentRelativePath !== '' && $parentPath !== '.';
                         href="?dir=<?= rawurlencode($parentPath === '.' ? '' : $parentPath) ?>"
                         class="rounded-lg bg-slate-800 px-4 py-2 text-sm font-medium hover:bg-slate-700"
                     >
-                        ← Übergeordnet
+                        ← Parent Directory
                     </a>
                 <?php endif; ?>
             </div>
 
             <?php if ($items === []): ?>
                 <div class="px-5 py-16 text-center text-slate-400">
-                    Dieses Verzeichnis ist leer.
+                    This directory is empty.
                 </div>
             <?php else: ?>
                 <div class="overflow-x-auto">
@@ -237,8 +240,8 @@ $hasParent = $currentRelativePath !== '' && $parentPath !== '.';
                         <thead class="bg-slate-950/60 text-xs uppercase tracking-wider text-slate-500">
                             <tr>
                                 <th class="px-5 py-4">Name</th>
-                                <th class="px-5 py-4">Größe</th>
-                                <th class="px-5 py-4">Geändert</th>
+                                <th class="px-5 py-4">Size</th>
+                                <th class="px-5 py-4">Last Modified</th>
                             </tr>
                         </thead>
 
@@ -269,7 +272,7 @@ $hasParent = $currentRelativePath !== '' && $parentPath !== '.';
                                     </td>
 
                                     <td class="whitespace-nowrap px-5 py-4 text-slate-400">
-                                        <?= date('d.m.Y H:i', $item['modified']) ?>
+                                        <?= date('Y-m-d H:i', $item['modified']) ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -280,8 +283,8 @@ $hasParent = $currentRelativePath !== '' && $parentPath !== '.';
         </section>
 
         <footer class="mt-6 text-xs text-slate-500">
-            <?= e($_SERVER['HTTP_HOST'] ?? 'Dateibrowser') ?>
-            · <?= count($items) ?> Einträge
+            <?= e($_SERVER['HTTP_HOST'] ?? 'File Browser') ?>
+            · <?= count($items) ?> items
         </footer>
     </div>
 </body>
